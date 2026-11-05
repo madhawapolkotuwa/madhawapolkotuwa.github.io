@@ -1018,6 +1018,742 @@
         flex-wrap: wrap;
       }
     }
+
+    /* ===== Scroll animations =====
+       Elements are tagged with .rv by the script at the end of the page, so
+       without JavaScript (or with reduced motion) everything simply shows.
+       Only transform and opacity are animated, so it stays on the compositor. */
+    body {
+      overflow-x: clip;
+    }
+
+    .progress {
+      position: fixed;
+      inset: 0 0 auto 0;
+      height: 3px;
+      z-index: 100;
+      pointer-events: none;
+      background: linear-gradient(90deg, var(--blue), var(--hi));
+      transform: scaleX(0);
+      transform-origin: 0 50%;
+      will-change: transform;
+    }
+
+    .rv {
+      opacity: 0;
+      transform: translate3d(0, 18px, 0);
+      transition:
+        opacity 0.7s cubic-bezier(0.22, 0.61, 0.36, 1),
+        transform 0.8s cubic-bezier(0.22, 0.61, 0.36, 1);
+      will-change: opacity, transform;
+    }
+
+    .rv[data-rv="rise"] {
+      transform: translate3d(0, 52px, 0);
+      transition-duration: 0.9s, 1s;
+    }
+
+    .rv[data-rv="left"] {
+      transform: translate3d(-28px, 0, 0);
+    }
+
+    .rv[data-rv="right"] {
+      transform: translate3d(28px, 0, 0);
+    }
+
+    .rv.in {
+      opacity: 1;
+      transform: none;
+    }
+
+    .rv.rv-done {
+      will-change: auto;
+    }
+
+    /* the hexagon bullet pops in with its heading */
+    .sub.rv::before {
+      opacity: 0;
+      transform: scale(0.2) rotate(-120deg);
+      transition:
+        transform 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) 0.15s,
+        opacity 0.4s ease 0.15s;
+    }
+
+    .sub.rv.in::before {
+      opacity: 1;
+      transform: none;
+    }
+
+    /* hero drifts at different speeds as you scroll away (--p is 0 to 1) */
+    .hero h1 span {
+      will-change: translate;
+    }
+
+    .hero h1 span:nth-child(1) {
+      translate: 0 calc(var(--p, 0) * 36px);
+    }
+
+    .hero h1 span:nth-child(2) {
+      translate: 0 calc(var(--p, 0) * 66px);
+    }
+
+    .hero h1 span:nth-child(3) {
+      translate: 0 calc(var(--p, 0) * 96px);
+    }
+
+    .hero .intro {
+      translate: 0 calc(var(--p, 0) * 40px);
+    }
+
+    @media (max-width: 820px) {
+      .rv[data-rv="left"] {
+        transform: translate3d(-14px, 0, 0);
+      }
+
+      .rv[data-rv="right"] {
+        transform: translate3d(14px, 0, 0);
+      }
+
+      .hero h1 span:nth-child(1) {
+        translate: 0 calc(var(--p, 0) * 16px);
+      }
+
+      .hero h1 span:nth-child(2) {
+        translate: 0 calc(var(--p, 0) * 28px);
+      }
+
+      .hero h1 span:nth-child(3) {
+        translate: 0 calc(var(--p, 0) * 40px);
+      }
+
+      .hero .intro {
+        translate: 0 calc(var(--p, 0) * 16px);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+
+      .rv,
+      .rv.in,
+      .sub.rv::before {
+        opacity: 1 !important;
+        transform: none !important;
+        transition: none !important;
+      }
+
+      .progress {
+        display: none;
+      }
+
+      .hero h1 span,
+      .hero .intro {
+        translate: none !important;
+      }
+    }
+
+    @media print {
+
+      .rv,
+      .sub.rv::before {
+        opacity: 1 !important;
+        transform: none !important;
+      }
+
+      .progress {
+        display: none;
+      }
+    }
+    /* ===== Hero: headline on the left, looping animated summary on the right ===== */
+    .reel {
+      margin-top: 2.6rem;
+      max-width: 34rem;
+      --c-line: rgba(248, 240, 168, 0.16);
+    }
+
+    @media (min-width: 1000px) {
+      .hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) clamp(21rem, 31vw, 29rem);
+        column-gap: clamp(2rem, 4vw, 4rem);
+        align-items: start;
+      }
+
+      .hero h1 {
+        font-size: clamp(2.6rem, 5.4vw, 5.8rem);
+      }
+
+      html[lang="ja"] .hero h1 {
+        font-size: clamp(2.2rem, 4.4vw, 4.8rem);
+      }
+
+      .hero h1 span:nth-child(2) {
+        margin-left: clamp(1rem, 5vw, 5rem);
+      }
+
+      .hero h1 span:nth-child(3) {
+        margin-left: clamp(0.5rem, 2.5vw, 2.5rem);
+      }
+
+      .hero .intro,
+      .hero .quick {
+        margin-left: clamp(0rem, 6vw, 6rem);
+      }
+
+      .reel {
+        margin-top: 0.8rem;
+        max-width: none;
+      }
+    }
+
+    .rl-stage {
+      position: relative;
+      height: 27rem;
+      overflow: hidden;
+      border: 1px solid var(--c-line);
+      border-radius: 14px;
+      background: rgba(43, 43, 82, 0.55);
+    }
+
+    .rl-sc {
+      position: absolute;
+      inset: 0;
+      padding: 1.3rem 1.3rem 1.1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.45s ease, visibility 0s 0.45s;
+    }
+
+    .rl-sc.rl-on {
+      opacity: 1;
+      visibility: visible;
+      transition: opacity 0.45s ease 0.1s, visibility 0s;
+    }
+
+    .rl-h {
+      font: 400 1.5rem/1.1 var(--serif);
+      letter-spacing: -0.01em;
+    }
+
+    .rl-big {
+      font-size: clamp(1.9rem, 3.2vw, 2.5rem);
+      margin-top: 0.4rem;
+    }
+
+    .rl-s {
+      font-size: 0.86rem;
+      line-height: 1.45;
+      opacity: 0.8;
+    }
+
+    .rl-list,
+    .rl-chk {
+      list-style: none;
+      padding: 0;
+      display: grid;
+      gap: 0.7rem;
+      margin-top: 0.6rem;
+    }
+
+    .rl-list li {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      font: 400 1.15rem var(--serif);
+    }
+
+    .rl-list li::before {
+      content: "";
+      flex: none;
+      width: 0.8em;
+      height: 0.9em;
+      background: var(--blue);
+      clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+    }
+
+    .rl-mail {
+      margin-top: auto;
+      font-size: 0.9rem;
+      color: var(--blue);
+    }
+
+    /* signal scene */
+    .rl-cv {
+      flex: 1;
+      min-height: 0;
+      width: 100%;
+      display: block;
+      border-radius: 8px;
+      background: rgba(7, 7, 25, 0.7);
+    }
+
+    .rl-flow {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+    }
+
+    .rl-chip {
+      padding: 0.2rem 0.7rem;
+      border: 1px solid var(--c-line);
+      border-radius: 999px;
+      font-size: 0.78rem;
+      transition: background 0.3s, color 0.3s, border-color 0.3s;
+    }
+
+    .rl-chip.rl-act {
+      background: var(--blue);
+      border-color: var(--blue);
+      color: var(--night);
+      font-weight: 600;
+    }
+
+    /* SQUID scene */
+    .rl-ch {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 0.35rem;
+    }
+
+    .rl-ch i {
+      height: 1.5rem;
+      border-radius: 3px;
+      background: var(--blue);
+    }
+
+    .rl-stats {
+      display: flex;
+      gap: 2rem;
+      margin-top: 0.3rem;
+    }
+
+    .rl-stats div {
+      display: grid;
+      gap: 0.1rem;
+      font-size: 0.82rem;
+      opacity: 0.95;
+    }
+
+    .rl-num {
+      font: 400 2.4rem/1 var(--serif);
+      color: var(--blue);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* edge AI scene */
+    .rl-rows {
+      display: grid;
+      gap: 0.5rem;
+      margin-top: 0.4rem;
+    }
+
+    .rl-lblrow {
+      font-size: 0.82rem;
+      margin-top: 0.5rem;
+    }
+
+    .rl-lane {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 0.5rem;
+      justify-items: center;
+    }
+
+    .rl-lane i {
+      width: 1.35rem;
+      height: 1.35rem;
+      border-radius: 50%;
+      border: 2px solid rgba(248, 240, 168, 0.55);
+    }
+
+    .rl-lane i.rl-bad {
+      background: var(--hi);
+      border-color: var(--hi);
+    }
+
+    .rl-key {
+      margin-top: auto;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.78rem;
+      opacity: 0.85;
+    }
+
+    .rl-key i {
+      width: 0.8rem;
+      height: 0.8rem;
+      border-radius: 50%;
+      background: var(--hi);
+    }
+
+    /* pharma checklist */
+    .rl-chk {
+      gap: 0.95rem;
+    }
+
+    .rl-chk li {
+      position: relative;
+      padding-left: 1.8rem;
+      font-size: 0.95rem;
+      line-height: 1.35;
+      animation: none;
+    }
+
+    .rl-chk li::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0.05rem;
+      width: 1.1rem;
+      height: 1.1rem;
+      border-radius: 50%;
+      background: var(--blue);
+    }
+
+    .rl-chk li::after {
+      content: "";
+      position: absolute;
+      left: 0.4rem;
+      top: 0.2rem;
+      width: 0.3rem;
+      height: 0.55rem;
+      border: solid var(--night);
+      border-width: 0 2px 2px 0;
+      transform: rotate(45deg);
+    }
+
+    /* eight-channel scene */
+    .rl-bars {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      align-items: flex-end;
+      gap: 0.5rem;
+      padding: 0.6rem;
+      border-radius: 8px;
+      background: rgba(7, 7, 25, 0.7);
+    }
+
+    .rl-bars i {
+      flex: 1;
+      height: 100%;
+      border-radius: 3px 3px 0 0;
+      background: var(--blue);
+      transform-origin: 50% 100%;
+    }
+
+    .rl-bars i:nth-child(even) {
+      background: var(--hi);
+    }
+
+    /* skills scene */
+    .rl-grp {
+      display: grid;
+      gap: 0.35rem;
+    }
+
+    .rl-gl {
+      font-size: 0.78rem;
+      opacity: 0.7;
+    }
+
+    .rl-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+    }
+
+    .rl-tag {
+      padding: 0.15rem 0.6rem;
+      border-radius: 999px;
+      border: 1px solid var(--c-line);
+      background: rgba(7, 7, 25, 0.55);
+      font-size: 0.78rem;
+    }
+
+    /* motion: all scoped to the active scene so hidden scenes cost nothing */
+    @keyframes rl-in {
+      from {
+        opacity: 0;
+        transform: translate3d(0, 10px, 0);
+      }
+
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+
+    @keyframes rl-pop {
+      from {
+        opacity: 0;
+        transform: scale(0.3);
+      }
+
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+
+    @keyframes rl-pulse {
+
+      0%,
+      100% {
+        opacity: 0.2;
+      }
+
+      50% {
+        opacity: 1;
+      }
+    }
+
+    @keyframes rl-lvl {
+      from {
+        transform: scaleY(0.15);
+      }
+
+      to {
+        transform: scaleY(1);
+      }
+    }
+
+    @keyframes rl-flag {
+
+      0%,
+      100% {
+        box-shadow: 0 0 0 0 rgba(234, 115, 90, 0);
+      }
+
+      50% {
+        box-shadow: 0 0 0 0.4rem rgba(234, 115, 90, 0.3);
+      }
+    }
+
+    .rl-on .rl-a {
+      animation: rl-in 0.6s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+      animation-delay: var(--dl, 0s);
+    }
+
+    .rl-on .rl-p {
+      animation: rl-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+      animation-delay: var(--dl, 0s);
+    }
+
+    .rl-on .rl-lane i.rl-bad {
+      animation:
+        rl-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) var(--dl, 0s) both,
+        rl-flag 1.8s ease-in-out calc(var(--dl, 0s) + 0.6s) infinite;
+    }
+
+    .rl-on .rl-chk li {
+      animation: rl-in 0.6s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+      animation-delay: var(--dl, 0s);
+    }
+
+    .rl-on .rl-chk li::before,
+    .rl-on .rl-chk li::after {
+      animation: rl-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+      animation-delay: calc(var(--dl, 0s) + 0.3s);
+    }
+
+    .rl-on .rl-chk li::after {
+      animation-name: rl-tick;
+    }
+
+    @keyframes rl-tick {
+      from {
+        opacity: 0;
+        transform: rotate(45deg) scale(0.2);
+      }
+
+      to {
+        opacity: 1;
+        transform: rotate(45deg);
+      }
+    }
+
+    .rl-on .rl-ch i {
+      animation: rl-pulse 2.4s ease-in-out infinite;
+      animation-delay: calc(var(--i, 0) * 0.09s);
+    }
+
+    .rl-on .rl-bars i {
+      animation: rl-lvl 1.3s ease-in-out infinite alternate;
+    }
+
+    .rl-on .rl-bars i:nth-child(1) {
+      animation-duration: 1.1s;
+    }
+
+    .rl-on .rl-bars i:nth-child(2) {
+      animation-duration: 1.7s;
+      animation-delay: -0.4s;
+    }
+
+    .rl-on .rl-bars i:nth-child(3) {
+      animation-duration: 1.3s;
+      animation-delay: -0.9s;
+    }
+
+    .rl-on .rl-bars i:nth-child(4) {
+      animation-duration: 1.9s;
+      animation-delay: -0.2s;
+    }
+
+    .rl-on .rl-bars i:nth-child(5) {
+      animation-duration: 1.2s;
+      animation-delay: -0.7s;
+    }
+
+    .rl-on .rl-bars i:nth-child(6) {
+      animation-duration: 1.6s;
+      animation-delay: -1.1s;
+    }
+
+    .rl-on .rl-bars i:nth-child(7) {
+      animation-duration: 1.4s;
+      animation-delay: -0.5s;
+    }
+
+    .rl-on .rl-bars i:nth-child(8) {
+      animation-duration: 1.8s;
+      animation-delay: -1.4s;
+    }
+
+    /* the rl-a wrapper fades the whole bars panel in, so its children keep their own loop */
+    .rl-on .rl-bars.rl-a {
+      animation: rl-in 0.6s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+      animation-delay: var(--dl, 0s);
+    }
+
+    .rl-on .rl-ch.rl-a {
+      animation: rl-in 0.6s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+      animation-delay: var(--dl, 0s);
+    }
+
+    /* controls */
+    .rl-bar {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      margin-top: 0.8rem;
+    }
+
+    .rl-bar[hidden] {
+      display: none;
+    }
+
+    .rl-btn {
+      flex: none;
+      width: 2rem;
+      height: 2rem;
+      padding: 0;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(248, 240, 168, 0.38);
+      border-radius: 50%;
+      background: none;
+      color: var(--ink);
+      cursor: pointer;
+    }
+
+    .rl-btn:hover {
+      color: var(--blue);
+      border-color: var(--blue);
+    }
+
+    .rl-btn svg {
+      width: 0.8rem;
+      height: 0.8rem;
+      fill: currentColor;
+    }
+
+    .rl-btn .i-play {
+      display: none;
+    }
+
+    .rl-paused .rl-btn .i-play {
+      display: block;
+    }
+
+    .rl-paused .rl-btn .i-pause {
+      display: none;
+    }
+
+    .rl-segs {
+      flex: 1;
+      display: flex;
+      gap: 0.3rem;
+    }
+
+    .rl-seg {
+      position: relative;
+      flex: 1;
+      height: 1.3rem;
+      padding: 0;
+      border: 0;
+      background: none;
+      cursor: pointer;
+    }
+
+    .rl-seg::before,
+    .rl-seg i {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 50%;
+      height: 3px;
+      margin-top: -1.5px;
+      border-radius: 2px;
+    }
+
+    .rl-seg::before {
+      background: rgba(248, 240, 168, 0.18);
+    }
+
+    .rl-seg:hover::before {
+      background: rgba(248, 240, 168, 0.36);
+    }
+
+    .rl-seg i {
+      background: var(--hi);
+      transform: scaleX(0);
+      transform-origin: 0 50%;
+    }
+
+    .rl-seg.rl-done i {
+      transform: scaleX(1);
+    }
+
+    /* pause everything when the viewer pauses, or when the panel is off screen */
+    .rl-paused .rl-sc *,
+    .rl-paused .rl-sc *::before,
+    .rl-paused .rl-sc *::after,
+    .rl-hold .rl-sc *,
+    .rl-hold .rl-sc *::before,
+    .rl-hold .rl-sc *::after {
+      animation-play-state: paused !important;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+
+      .rl-sc *,
+      .rl-sc *::before,
+      .rl-sc *::after {
+        animation: none !important;
+      }
+    }
+
+    @media (max-width: 420px) {
+      .rl-stage {
+        height: 29rem;
+      }
+    }
   </style>
 </head>
 
@@ -1043,12 +1779,13 @@
 
     <main id="top">
       <div class="hero">
+        <div class="hero-main">
         <h1>
           <span>Machines that</span><span>find what hides</span><span>in the signal.</span>
         </h1>
         <div class="intro">
           <p>
-            I’m a system engineer in Japan with six years in industrial
+            I’m a system engineer in Japan with 7 years in industrial
             automation and embedded systems. I write the firmware, signal
             processing and software that sit between a sensor and the person
             operating the machine, from superconducting detectors to
@@ -1084,6 +1821,94 @@
             Browse GitHub
           </a>
         </p>
+        </div>
+        <aside class="reel" aria-label="Animated summary of my skills, achievements and projects">
+          <div class="rl-stage" aria-hidden="true">
+
+            <div class="rl-sc rl-on" data-d="8">
+              <p class="rl-h rl-big rl-a" style="--dl:.15s">Madhawa Polkotuwa</p>
+              <p class="rl-s rl-a" style="--dl:.7s" data-ja="日本で働くシステムエンジニア（７年以上）">System engineer in Japan, 7+ years</p>
+              <ul class="rl-list">
+                <li class="rl-a" style="--dl:1.5s" data-ja="産業オートメーション">Industrial automation</li>
+                <li class="rl-a" style="--dl:2.2s" data-ja="組込みシステム">Embedded systems</li>
+                <li class="rl-a" style="--dl:2.9s" data-ja="エッジAI">Edge AI</li>
+              </ul>
+            </div>
+
+            <div class="rl-sc" data-d="14">
+              <p class="rl-h rl-a" style="--dl:.1s" data-ja="ノイズ混じりの信号を、きれいに">Noisy signal in, clean signal out</p>
+              <canvas class="rl-cv"></canvas>
+              <div class="rl-flow rl-a" style="--dl:.5s">
+                <span class="rl-chip">ADC</span><span class="rl-chip">CIC</span><span class="rl-chip">FIR</span><span class="rl-chip" data-ja="位相">Phase</span>
+              </div>
+              <p class="rl-s rl-a" style="--dl:.8s" data-ja="dsPIC33CHファームウェアでのリアルタイムCIC・FIRフィルタ">Real-time CIC and FIR filtering in dsPIC33CH firmware</p>
+            </div>
+
+            <div class="rl-sc" data-d="11">
+              <p class="rl-h rl-a" style="--dl:.1s" data-ja="24チャンネルSQUID金属検出機">24-channel SQUID metal detector</p>
+              <div class="rl-ch rl-a" style="--dl:.4s"><i style="--i:0"></i><i style="--i:1"></i><i style="--i:2"></i><i style="--i:3"></i><i style="--i:4"></i><i style="--i:5"></i><i style="--i:6"></i><i style="--i:7"></i><i style="--i:8"></i><i style="--i:9"></i><i style="--i:10"></i><i style="--i:11"></i><i style="--i:12"></i><i style="--i:13"></i><i style="--i:14"></i><i style="--i:15"></i><i style="--i:16"></i><i style="--i:17"></i><i style="--i:18"></i><i style="--i:19"></i><i style="--i:20"></i><i style="--i:21"></i><i style="--i:22"></i><i style="--i:23"></i></div>
+              <div class="rl-stats rl-a" style="--dl:.8s">
+                <div><b class="rl-num">+<span data-count="30">0</span>%</b><span data-ja="検出精度の向上">better detection accuracy</span></div>
+                <div><b class="rl-num"><span data-count="24">0</span></b><span data-ja="チャンネル">channels</span></div>
+              </div>
+              <p class="rl-s rl-a" style="--dl:1.4s" data-ja="初号機はBattery Japan 2023に出展。EASSE台湾2025では共著者として発表">First model at Battery Japan 2023. Co-author credit at EASSE Taiwan, 2025</p>
+            </div>
+
+            <div class="rl-sc" data-d="10">
+              <p class="rl-h rl-a" style="--dl:.1s" data-ja="STM32N6上のエッジAI">Edge AI on an STM32N6</p>
+              <p class="rl-s rl-a" style="--dl:.4s" data-ja="食品検査用金属検出機の誤排除を減らす">Fewer false rejects in a food-inspection metal detector</p>
+              <div class="rl-rows">
+                <div class="rl-lblrow rl-a" style="--dl:.7s" data-ja="検出機のみ">Detector alone</div>
+                <div class="rl-lane"><i class="rl-p" style="--dl:0.90s"></i><i class="rl-p rl-bad" style="--dl:1.12s"></i><i class="rl-p" style="--dl:1.34s"></i><i class="rl-p" style="--dl:1.56s"></i><i class="rl-p rl-bad" style="--dl:1.78s"></i><i class="rl-p" style="--dl:2.00s"></i><i class="rl-p rl-bad" style="--dl:2.22s"></i><i class="rl-p" style="--dl:2.44s"></i></div>
+                <div class="rl-lblrow rl-a" style="--dl:3.2s" data-ja="検出機＋エッジAI">Detector plus Edge AI</div>
+                <div class="rl-lane"><i class="rl-p" style="--dl:3.40s"></i><i class="rl-p" style="--dl:3.62s"></i><i class="rl-p" style="--dl:3.84s"></i><i class="rl-p" style="--dl:4.06s"></i><i class="rl-p rl-bad" style="--dl:4.28s"></i><i class="rl-p" style="--dl:4.50s"></i><i class="rl-p" style="--dl:4.72s"></i><i class="rl-p" style="--dl:4.94s"></i></div>
+              </div>
+              <p class="rl-key rl-a" style="--dl:1s"><i></i><span data-ja="排除と判定">Flagged for rejection</span></p>
+            </div>
+
+            <div class="rl-sc" data-d="10">
+              <p class="rl-h rl-a" style="--dl:.1s" data-ja="FDA対応の制御ソフトウェア">FDA-ready control software</p>
+              <p class="rl-s rl-a" style="--dl:.4s" data-ja="NTシリーズ製薬機械向け 21 CFR Part 11">21 CFR Part 11 for NT-Series pharmaceutical machines</p>
+              <ul class="rl-chk">
+                <li style="--dl:1s" data-ja="OPC UAとEtherNet/IPでPLCとPCを連携">PLC and PC linked over OPC UA and EtherNet/IP</li>
+                <li style="--dl:2.4s" data-ja="SQL Serverでバッチ・レシピを管理">Batch and recipe data in SQL Server</li>
+                <li style="--dl:3.8s" data-ja="LDAPによるユーザー認証">LDAP user authentication</li>
+                <li style="--dl:5.2s" data-ja="製薬市場への参入を実現">Opened the pharmaceutical market</li>
+              </ul>
+            </div>
+
+            <div class="rl-sc" data-d="10">
+              <p class="rl-h rl-a" style="--dl:.1s" data-ja="8チャンネル信号処理プロセッサ">8-channel signal processor</p>
+              <div class="rl-bars rl-a" style="--dl:.4s"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+              <p class="rl-s rl-a" style="--dl:.8s" data-ja="CIC・FIRフィルタを載せたdsPIC33CHファームウェア。メインCPUとはCANで通信">dsPIC33CH firmware with CIC and FIR filters, talking to the main CPU over CAN</p>
+            </div>
+
+            <div class="rl-sc" data-d="11">
+              <p class="rl-h rl-a" style="--dl:.1s" data-ja="使っている技術">What I work with</p>
+              <div class="rl-grp"><span class="rl-gl rl-a" style="--dl:0.30s" data-ja="ファームウェア">Firmware</span><div class="rl-tags"><span class="rl-tag rl-p" style="--dl:0.60s">C</span><span class="rl-tag rl-p" style="--dl:0.72s">C++</span><span class="rl-tag rl-p" style="--dl:0.84s">STM32</span><span class="rl-tag rl-p" style="--dl:0.96s">dsPIC33CH</span><span class="rl-tag rl-p" style="--dl:1.08s">ESP32</span><span class="rl-tag rl-p" style="--dl:1.20s">QNX RTOS</span><span class="rl-tag rl-p" style="--dl:1.32s">Embedded Linux</span></div></div><div class="rl-grp"><span class="rl-gl rl-a" style="--dl:1.00s" data-ja="産業機器">Industrial</span><div class="rl-tags"><span class="rl-tag rl-p" style="--dl:1.44s">OPC UA</span><span class="rl-tag rl-p" style="--dl:1.56s">EtherNet/IP</span><span class="rl-tag rl-p" style="--dl:1.68s">CAN</span><span class="rl-tag rl-p" style="--dl:1.80s">SPI</span><span class="rl-tag rl-p" style="--dl:1.92s">UART</span></div></div><div class="rl-grp"><span class="rl-gl rl-a" style="--dl:1.50s" data-ja="ソフトウェア">Software</span><div class="rl-tags"><span class="rl-tag rl-p" style="--dl:2.04s">C#</span><span class="rl-tag rl-p" style="--dl:2.16s">WPF</span><span class="rl-tag rl-p" style="--dl:2.28s">Qt/QML</span><span class="rl-tag rl-p" style="--dl:2.40s">Python</span><span class="rl-tag rl-p" style="--dl:2.52s">ASP.NET Core</span><span class="rl-tag rl-p" style="--dl:2.64s">React</span><span class="rl-tag rl-p" style="--dl:2.76s">TypeScript</span></div></div><div class="rl-grp"><span class="rl-gl rl-a" style="--dl:2.20s" data-ja="AI">AI</span><div class="rl-tags"><span class="rl-tag rl-p" style="--dl:2.88s">Edge Impulse</span><span class="rl-tag rl-p" style="--dl:3.00s">STM32Cube.AI</span><span class="rl-tag rl-p" style="--dl:3.12s">PyTorch</span><span class="rl-tag rl-p" style="--dl:3.24s">TensorFlow</span></div></div>
+            </div>
+
+            <div class="rl-sc" data-d="8">
+              <p class="rl-h rl-a" style="--dl:.1s" data-ja="オープンに発信">Building in the open</p>
+              <ul class="rl-list">
+                <li class="rl-a" style="--dl:.7s" data-ja="YouTubeのチュートリアル">YouTube tutorials</li>
+                <li class="rl-a" style="--dl:1.5s" data-ja="GitHubのプロジェクトとチュートリアル">GitHub tutorials & projects</li>
+                <li class="rl-a" style="--dl:2.3s" data-ja="Mediumの手順解説記事">Medium step-by-step articles</li>
+              </ul>
+              <p class="rl-mail rl-a" style="--dl:3.4s">madhawapolkotuwa@gmail.com</p>
+            </div>
+
+          </div>
+          <div class="rl-bar" hidden>
+            <button class="rl-btn" type="button" aria-label="Pause animation">
+              <svg class="i-pause" viewBox="0 0 10 10" aria-hidden="true"><path d="M1.5 1h2.4v8H1.5zM6.1 1h2.4v8H6.1z" /></svg>
+              <svg class="i-play" viewBox="0 0 10 10" aria-hidden="true"><path d="M2 1l7 4-7 4z" /></svg>
+            </button>
+            <div class="rl-segs">
+              <button class="rl-seg" type="button"><i></i></button><button class="rl-seg" type="button"><i></i></button><button class="rl-seg" type="button"><i></i></button><button class="rl-seg" type="button"><i></i></button><button class="rl-seg" type="button"><i></i></button><button class="rl-seg" type="button"><i></i></button><button class="rl-seg" type="button"><i></i></button><button class="rl-seg" type="button"><i></i></button>
+            </div>
+          </div>
+        </aside>
       </div>
 
       <section class="chain" id="chain" aria-labelledby="chainH">
@@ -1563,7 +2388,7 @@
         [".hero h1 span:nth-child(3)", "機械たち。"],
         [
           ".intro p:nth-child(1)",
-          "私は日本で働くシステムエンジニアで、産業オートメーションと組み込みシステムの分野で6年の経験があります。超伝導検出器から医薬品の製造ラインまで、センサーとそれを操作する人の間に入るファームウェア、信号処理、ソフトウェアを書いています。",
+          "私は日本で働くシステムエンジニアで、産業オートメーションと組み込みシステムの分野で７年の経験があります。超伝導検出器から医薬品の製造ラインまで、センサーとそれを操作する人の間に入るファームウェア、信号処理、ソフトウェアを書いています。",
         ],
         [
           ".intro p:nth-child(2)",
@@ -2828,6 +3653,451 @@
       });
       build();
       requestAnimationFrame(frame);
+    })();
+  </script>
+  <script>
+    /* ===== Scroll animations =====
+       1. Reveal: elements fade and slide in once as they enter the viewport
+          (IntersectionObserver, played once, staggered when several arrive together).
+       2. Hero drift: the headline lines move at different speeds as you scroll away.
+       3. Progress bar: a thin line at the top fills as you read down the page.
+       Nothing here touches the text inside elements, so the EN / 日本語 toggle is unaffected.
+       Skipped entirely when the visitor prefers reduced motion. */
+    (function () {
+      var root = document.documentElement;
+      var motion = window.matchMedia("(prefers-reduced-motion: reduce)");
+      if (motion.matches || !("IntersectionObserver" in window)) return;
+
+      /* [selector, variant]. Variants: "" (rise), "rise" (bigger), "left", "right" */
+      var TARGETS = [
+        /* header + hero (plays on load) */
+        [".top", ""],
+        [".hero h1 span", "rise"],
+        [".hero .intro p", ""],
+        [".hero .quick", ""],
+        [".reel", ""],
+        /* signal chain demo (opacity/translate only, so the canvases keep their size) */
+        ["#chain .sec-h", ""],
+        ["#chain .sc-lead", ""],
+        ["#chain .flow .blk", ""],
+        ["#chain .panel", ""],
+        ["#chain .stack .card", ""],
+        /* work */
+        ["#work > .sec-h", ""],
+        [".proj.p1, .proj.p3", "left"],
+        [".proj.p2, .proj.p4", "right"],
+        [".also", ""],
+        /* watch, read, fork */
+        ["#learn > .sec-h", ""],
+        ["#learn > .lead", ""],
+        ["#learn > .sub", ""],
+        [".vf", ""],
+        [".vsm article", ""],
+        [".repos li", "left"],
+        ["#learn > a.big", ""],
+        [".med", ""],
+        /* path, toolbox, contact */
+        ["#path .sec-h", ""],
+        [".stop:nth-child(odd)", "left"],
+        [".stop:nth-child(even)", "right"],
+        [".tools-col", ""],
+        [".share-col", ""],
+        [".contact h2", ""],
+        [".contact .mail", ""],
+        [".contact .links a", ""],
+        [".contact footer", ""],
+      ];
+
+      var pending = [];
+      TARGETS.forEach(function (t) {
+        [].forEach.call(document.querySelectorAll(t[0]), function (el) {
+          if (el.classList.contains("rv")) return;
+          el.classList.add("rv");
+          if (t[1]) el.setAttribute("data-rv", t[1]);
+          pending.push(el);
+        });
+      });
+
+      function show(el, delay) {
+        if (el.classList.contains("in")) return;
+        el.style.transitionDelay = delay ? delay + "ms" : "";
+        el.classList.add("in");
+        el.addEventListener("transitionend", function done(ev) {
+          if (ev.target !== el || ev.propertyName !== "opacity") return;
+          el.removeEventListener("transitionend", done);
+          el.style.transitionDelay = "";
+          el.classList.add("rv-done");
+        });
+      }
+
+      var io = new IntersectionObserver(
+        function (entries) {
+          /* items that arrive together are staggered in reading order */
+          entries
+            .filter(function (e) {
+              return e.isIntersecting;
+            })
+            .sort(function (a, b) {
+              var A = a.boundingClientRect,
+                B = b.boundingClientRect;
+              return A.top - B.top || A.left - B.left;
+            })
+            .forEach(function (e, i) {
+              show(e.target, Math.min(i * 80, 480));
+              io.unobserve(e.target);
+            });
+        },
+        { threshold: 0, rootMargin: "0px 0px -6% 0px" },
+      );
+      pending.forEach(function (el) {
+        io.observe(el);
+      });
+
+      function revealAll() {
+        io.disconnect();
+        pending.forEach(function (el) {
+          show(el, 0);
+        });
+      }
+
+      /* ---------- scroll-linked: progress bar + hero drift ---------- */
+      var bar = document.createElement("div");
+      bar.className = "progress";
+      bar.setAttribute("aria-hidden", "true");
+      document.body.insertBefore(bar, document.body.firstChild);
+
+      var hero = document.querySelector(".hero"),
+        heroH = 1,
+        maxY = 1,
+        lastP = -1,
+        ticking = false,
+        allShown = false;
+
+      function measure() {
+        heroH = (hero && hero.offsetHeight) || 1;
+        maxY = Math.max(1, root.scrollHeight - window.innerHeight);
+        onScroll();
+      }
+
+      function update() {
+        ticking = false;
+        var y = window.pageYOffset || root.scrollTop || 0;
+        bar.style.transform = "scaleX(" + Math.min(1, y / maxY).toFixed(4) + ")";
+        if (hero) {
+          var p = Math.min(1, Math.max(0, y / heroH));
+          p = Math.round(p * 1000) / 1000;
+          if (p !== lastP) {
+            lastP = p;
+            hero.style.setProperty("--p", p);
+          }
+        }
+        /* at the very bottom, make sure short last items are not left hidden */
+        if (!allShown && y >= maxY - 2) {
+          allShown = true;
+          revealAll();
+        }
+      }
+
+      function onScroll() {
+        if (!ticking) {
+          ticking = true;
+          requestAnimationFrame(update);
+        }
+      }
+
+      window.addEventListener("scroll", onScroll, { passive: true });
+      if ("ResizeObserver" in window) new ResizeObserver(measure).observe(document.body);
+      else window.addEventListener("resize", measure);
+      measure();
+
+      /* if the visitor turns reduced motion on while the page is open */
+      var stop = function () {
+        if (!motion.matches) return;
+        revealAll();
+        window.removeEventListener("scroll", onScroll);
+        bar.style.display = "none";
+        if (hero) hero.style.removeProperty("--p");
+      };
+      if (motion.addEventListener) motion.addEventListener("change", stop);
+    })();
+  </script>
+
+  <script>
+    /* ===== Hero reel: a looping animated summary (about 82 s) =====
+       Eight scenes play one after another, then start over. Scene timing comes from
+       data-d (seconds) on each .rl-sc. Text with data-ja is swapped by the EN / 日本語 toggle.
+       It pauses when scrolled off screen, when the tab is hidden, or when the viewer
+       presses pause, and it starts paused if the visitor prefers reduced motion. */
+    (function () {
+      var reel = document.querySelector(".reel");
+      if (!reel) return;
+      var scenes = [].slice.call(reel.querySelectorAll(".rl-sc")),
+        segs = [].slice.call(reel.querySelectorAll(".rl-seg")),
+        bar = reel.querySelector(".rl-bar"),
+        btn = reel.querySelector(".rl-btn"),
+        cv = reel.querySelector(".rl-cv"),
+        chips = [].slice.call(reel.querySelectorAll(".rl-flow .rl-chip")),
+        texts = [].slice.call(reel.querySelectorAll("[data-ja]")),
+        n = scenes.length,
+        SIG = 1,
+        dur = scenes.map(function (s) {
+          return (+s.getAttribute("data-d") || 8) * 1000;
+        }),
+        names = [
+          ["Introduction", "紹介"],
+          ["Signal filtering", "信号処理"],
+          ["SQUID detector", "SQUID検出機"],
+          ["Edge AI", "エッジAI"],
+          ["Pharmaceutical software", "製薬向けソフトウェア"],
+          ["Signal processor", "信号処理プロセッサ"],
+          ["Skills", "技術"],
+          ["Open source", "発信"],
+        ],
+        reduce = window.matchMedia("(prefers-reduced-motion: reduce)"),
+        idx = 0,
+        t = 0,
+        last = null,
+        running = false,
+        onScreen = true,
+        playing = !reduce.matches,
+        counters = [];
+
+      bar.hidden = false;
+      texts.forEach(function (el) {
+        el._en = el.textContent;
+      });
+
+      /* ---------- signal scene (canvas) ---------- */
+      var ctx = cv.getContext("2d"),
+        W = 0,
+        H = 0,
+        NOISE = [0.9, 0.5, 0.2, 0.04],
+        PHASE = [0, 0, 0, 0.9],
+        amp = 0.9,
+        ph = 0,
+        stage = -1,
+        nz = [],
+        nzAt = 0,
+        STAGE_MS = 3300,
+        css = getComputedStyle(document.documentElement),
+        cAmber = css.getPropertyValue("--blue").trim() || "#e3a41f",
+        cInk = css.getPropertyValue("--ink").trim() || "#f8f0a8";
+
+      function sizeCanvas() {
+        var dpr = Math.min(2, window.devicePixelRatio || 1);
+        W = cv.clientWidth;
+        H = cv.clientHeight;
+        if (!W || !H) return;
+        cv.width = Math.round(W * dpr);
+        cv.height = Math.round(H * dpr);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+
+      function clean(u, time, p) {
+        return (
+          0.62 * Math.sin(6.2832 * (2.2 * u - time * 0.28 + p)) +
+          0.22 * Math.sin(6.2832 * (5.1 * u - time * 0.5 + p * 2))
+        );
+      }
+
+      function drawSignal(dt) {
+        if (!W || !H) return;
+        var k = Math.min(3, Math.floor(t / STAGE_MS));
+        if (k !== stage) {
+          stage = k;
+          chips.forEach(function (c, j) {
+            c.classList.toggle("rl-act", j === k);
+          });
+        }
+        var ease = 1 - Math.exp(-dt / 380);
+        amp += (NOISE[k] - amp) * ease;
+        ph += (PHASE[k] - ph) * ease;
+
+        var N = Math.max(60, Math.floor(W / 3)),
+          time = t / 1000;
+        if (!nz.length || nz.length !== N || t - nzAt > 60) {
+          nz = [];
+          for (var i = 0; i < N; i++) nz.push(Math.random() * 2 - 1);
+          nzAt = t;
+        }
+        ctx.clearRect(0, 0, W, H);
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = "rgba(248,240,168,0.09)";
+        for (var g = 1; g < 4; g++) {
+          ctx.beginPath();
+          ctx.moveTo(0, (H * g) / 4);
+          ctx.lineTo(W, (H * g) / 4);
+          ctx.stroke();
+        }
+        var sc = H * 0.34,
+          mid = H / 2;
+        function path(a, p, col, lw) {
+          ctx.beginPath();
+          for (var j = 0; j < N; j++) {
+            var u = j / (N - 1),
+              y = mid - (clean(u, time, p) + nz[j] * a * 0.7) * sc;
+            if (j) ctx.lineTo(u * W, y);
+            else ctx.moveTo(0, y);
+          }
+          ctx.strokeStyle = col;
+          ctx.lineWidth = lw;
+          ctx.lineJoin = "round";
+          ctx.stroke();
+        }
+        path(NOISE[0], 0, "rgba(248,240,168,0.28)", 1);
+        path(amp, ph * 0.12, cAmber, 2);
+      }
+
+      /* ---------- scene control ---------- */
+      function pickCounters() {
+        counters = [].slice.call(scenes[idx].querySelectorAll("[data-count]"));
+        counters.forEach(function (el) {
+          el.textContent = "0";
+        });
+      }
+
+      function mark() {
+        segs.forEach(function (s, k) {
+          s.classList.toggle("rl-done", k < idx);
+          s.style.removeProperty("--x");
+          s.firstElementChild.style.transform = "";
+          if (k === idx) s.setAttribute("aria-current", "true");
+          else s.removeAttribute("aria-current");
+        });
+      }
+
+      function go(i) {
+        var el = scenes[idx];
+        el.classList.remove("rl-on");
+        if (i === idx) void el.offsetWidth; /* restart the same scene */
+        idx = i;
+        t = 0;
+        scenes[idx].classList.add("rl-on");
+        mark();
+        pickCounters();
+        if (idx === SIG) {
+          amp = NOISE[0];
+          ph = 0;
+          stage = -1;
+          sizeCanvas();
+          drawSignal(0);
+        }
+      }
+
+      function render(dt) {
+        segs[idx].firstElementChild.style.transform =
+          "scaleX(" + Math.min(1, t / dur[idx]).toFixed(3) + ")";
+        if (counters.length) {
+          var p = Math.min(1, Math.max(0, (t - 800) / 1800)),
+            e = 1 - Math.pow(1 - p, 3);
+          counters.forEach(function (el) {
+            el.textContent = Math.round(+el.getAttribute("data-count") * e);
+          });
+        }
+        if (idx === SIG && !reduce.matches) drawSignal(dt);
+      }
+
+      function frame(now) {
+        if (!running) return;
+        if (last === null) last = now;
+        var dt = Math.min(100, now - last);
+        last = now;
+        t += dt;
+        while (t >= dur[idx]) {
+          var rest = t - dur[idx];
+          go((idx + 1) % n);
+          t = rest;
+        }
+        render(dt);
+        requestAnimationFrame(frame);
+      }
+
+      function start() {
+        if (running || !playing || !onScreen || document.hidden) return;
+        running = true;
+        last = null;
+        requestAnimationFrame(frame);
+      }
+
+      function stop() {
+        running = false;
+      }
+
+      /* ---------- labels, language ---------- */
+      function labels(lang) {
+        var ja = lang === "ja";
+        texts.forEach(function (el) {
+          el.textContent = ja ? el.getAttribute("data-ja") : el._en;
+        });
+        btn.setAttribute(
+          "aria-label",
+          playing
+            ? ja ? "アニメーションを一時停止" : "Pause animation"
+            : ja ? "アニメーションを再生" : "Play animation",
+        );
+        segs.forEach(function (s, k) {
+          s.setAttribute(
+            "aria-label",
+            (ja ? "シーン " : "Scene ") + (k + 1) + ": " + names[k][ja ? 1 : 0],
+          );
+        });
+      }
+
+      function setPlaying(b) {
+        playing = b;
+        reel.classList.toggle("rl-paused", !b);
+        labels(window.I18N ? I18N.lang : "en");
+        if (b) start();
+        else stop();
+      }
+
+      /* ---------- wiring ---------- */
+      btn.addEventListener("click", function () {
+        setPlaying(!playing);
+      });
+      segs.forEach(function (s, k) {
+        s.addEventListener("click", function () {
+          go(k);
+          setPlaying(true);
+        });
+      });
+
+      if ("IntersectionObserver" in window)
+        new IntersectionObserver(
+          function (e) {
+            onScreen = e[0].isIntersecting;
+            reel.classList.toggle("rl-hold", !onScreen);
+            if (onScreen) start();
+            else stop();
+          },
+          { threshold: 0.1 },
+        ).observe(reel);
+
+      document.addEventListener("visibilitychange", function () {
+        if (document.hidden) stop();
+        else start();
+      });
+
+      if ("ResizeObserver" in window)
+        new ResizeObserver(function () {
+          sizeCanvas();
+          if (idx === SIG) drawSignal(0);
+        }).observe(cv);
+      else window.addEventListener("resize", sizeCanvas);
+
+      if (reduce.addEventListener)
+        reduce.addEventListener("change", function () {
+          if (reduce.matches) setPlaying(false);
+        });
+
+      if (window.I18N) I18N.on(labels);
+
+      /* first scene is already marked .rl-on in the markup */
+      mark();
+      pickCounters();
+      reel.classList.toggle("rl-paused", !playing);
+      labels(window.I18N ? I18N.lang : "en");
+      start();
     })();
   </script>
 </body>
